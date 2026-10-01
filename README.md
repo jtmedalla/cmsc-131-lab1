@@ -129,7 +129,7 @@ who owns it.
 
 | Week | Goal | Owner |
 |---|---|---|
-| 1 | | |
+| 1 | Checksum /wo tests | JB Aparicio |
 | 2 | | |
 | 3 | | |
 | 4 | Defense | |
