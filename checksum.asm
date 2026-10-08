@@ -62,7 +62,61 @@ _ip_checksum:
         ; enough. Leave the answer in ax when you return.
         ;
 
+        ; setup, we move the pointer to esi, and the size to ecx
+        mov     esi, [ebp+8]
+        mov     ecx, [ebp+12]
+        shr     ecx, 1
+        
+        ; our main accumulator (32bit/4byte)
+        mov     edx, 0
+
+        ; if the shr sets off the ZF, it means the word count is 0
+        jz      .fold
+        
+.checksum_loop:
+
+        cmp     ecx, 0
+        jle     .fold
+        ; high byte
+        movzx   eax, byte [esi]
+        shl     eax, 8                  ; move to bits 8-15
+        
+        ;low byte
+        movzx   ebx, byte [esi + 1]
+        or      eax, ebx                 ; 0-7
+
+        ; add to accumulator 
+        add     edx, eax
+        ; move to next endian
+        add     esi, 2
+        dec     ecx
+        jmp     .checksum_loop
+
+.fold:
+        ; stores the higher bits in eax for arithmetic later
+        mov     eax, edx
+        shr     eax, 16
+
+        ; if there is nothing above bit 15, fold is finished
+        jz      .done
+
+        ; edx now only contains its lower half
+        movzx   edx, dx
+        ; upper half of edx (now eax) add to edx (now only dx)
+        add     edx, eax
+        jmp     .fold
+
+.done:
+        not     edx
+        and     edx, 0xFFFF
+        ; replace original value with edx ( now with all 0s after bit 16)
+        mov   [esp + 28], edx
+
+        ; DO NOTTTTT mov eax, 0 after popa as that replaces eax with 0, 
+        ; we also cant just mov eax, edx after popa because edx is also popped, leaving it with 0
+        ; if we dont replace the original value of eax we end up with a wasted (incorrect) checksum, as it will 
+        ; always be 0 returned
+
         popa
-        mov     eax, 0
         leave
         ret
