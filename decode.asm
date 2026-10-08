@@ -93,7 +93,7 @@ _decode_header:
 
         mov     [edi+16], eax      ; saves total length
      
-             movzx   eax, byte [esi+4]  ; gets the fifth byte
+        movzx   eax, byte [esi+4]  ; gets the fifth byte
         shl     eax, 8             ; shifts left by 8 bits
 
         movzx   edx, byte [esi+5]  ; gets the sixth byte
