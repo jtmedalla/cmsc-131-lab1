@@ -62,9 +62,11 @@ _decode_header:
         ; the struct, and driver.c does the rest.
         ;
 
+; Get header and output addresses
         mov     esi, [ebp+8]     ; get the hdr
         mov     edi, [ebp+12]    ; get the out
 
+        ; Version and IHL
         movzx   eax, byte [esi]  ; gets the first byte
         mov     edx, eax         ; copies the first byte
 
@@ -75,6 +77,7 @@ _decode_header:
         and     eax, 0x0F        ; keep only 4 bits
         mov     [edi+0], eax     ; saves version
 
+        ; DSCP and ECN
         movzx   eax, byte [esi+1]  ; gets the second byte
         mov     edx, eax           ; copies the second byte
 
@@ -85,22 +88,23 @@ _decode_header:
         and     edx, 0x03          ; keeps the lower 2 bits for ECN
         mov     [edi+12], edx      ; saves ECN
 
+        ; Total Length
         movzx   eax, byte [esi+2]  ; gets the third byte
         shl     eax, 8             ; shifts left by 8 bits
 
         movzx   edx, byte [esi+3]  ; gets the fourth byte
         or      eax, edx           ; combines both bytes
-
         mov     [edi+16], eax      ; saves total length
-     
+
+        ; Identification
         movzx   eax, byte [esi+4]  ; gets the fifth byte
         shl     eax, 8             ; shifts left by 8 bits
 
         movzx   edx, byte [esi+5]  ; gets the sixth byte
         or      eax, edx           ; combines both bytes
-
         mov     [edi+20], eax      ; saves identification
-        
+
+        ; Flags and Fragment Offset
         movzx   eax, byte [esi+6]  ; gets the seventh byte
         shl     eax, 8             ; shifts left by 8 bits
 
@@ -114,20 +118,23 @@ _decode_header:
 
         and     eax, 0x1FFF        ; keeps the lower 13 bits
         mov     [edi+28], eax      ; saves fragment offset
-        
+
+        ; TTL and Protocol
         movzx   eax, byte [esi+8]  ; gets the ninth byte
         mov     [edi+32], eax      ; saves TTL
 
         movzx   eax, byte [esi+9]  ; gets the tenth byte
         mov     [edi+36], eax      ; saves protocol
-        
+
+        ; Header Checksum
         movzx   eax, byte [esi+10]  ; gets the eleventh byte
         shl     eax, 8              ; shifts left by 8 bits
 
         movzx   edx, byte [esi+11]  ; gets the twelfth byte
         or      eax, edx            ; combines both bytes
         mov     [edi+40], eax       ; saves header checksum
-        
+
+        ; Source IP Address
         mov     al, [esi+12]     ; gets the thirteenth byte
         mov     [edi+44], al     ; saves first source IP byte
 
@@ -139,7 +146,8 @@ _decode_header:
 
         mov     al, [esi+15]     ; gets the sixteenth byte
         mov     [edi+47], al     ; saves fourth source IP byte
-        
+
+        ; Destination IP Address
         mov     al, [esi+16]     ; gets the seventeenth byte
         mov     [edi+48], al     ; saves first destination IP byte
 
@@ -151,6 +159,8 @@ _decode_header:
 
         mov     al, [esi+19]     ; gets the twentieth byte
         mov     [edi+51], al     ; saves fourth destination IP byte
+
+        ; Restore registers and return
         popa
         mov     eax, 0
         leave
