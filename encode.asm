@@ -142,6 +142,16 @@ _encode_header:
 
         mov [edi + 19], al              ; fourth octet
 
+        ; compute the checksum with the completed header
+        push 20                         ; length of the header and push to stack                   
+        push edi                        ; get the pointer of the header array and push to stack
+
+        call ip_checksum                ; call the ip_checksum function
+
+        add esp, 8                      ; remove the pushed arguments
+
+        mov [edi + 10], ah              ; upper value of the header checksum in the header's 10th byte
+        mov [edi + 11], al              ; upper value of the header checksum in the header's 11th by
 
         popa
         mov eax, 0
