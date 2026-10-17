@@ -102,6 +102,14 @@ _encode_header:
         mov [edi + 6], al               ; upper byte of flags + 5 bit of offset
         mov [edi + 7], bl               ; remaining 8 bits of offset
 
+        ; copy the value of the TTL and place them into the header
+        mov eax, [esi + 32]             ; value of the TTL
+        mov [edi + 8], al               ; the value of the 8th byte in the header
+
+        ; copy the value of the Protocol and place them into the header
+        mov eax, [esi + 36]             ; value of the protocol
+        mov [edi + 9], al               ; the value of the 9th byte in the header
+
         popa
         mov eax, 0
         leave
