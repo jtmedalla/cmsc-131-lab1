@@ -110,6 +110,10 @@ _encode_header:
         mov eax, [esi + 36]             ; value of the protocol
         mov [edi + 9], al               ; the value of the 9th byte in the header
 
+        ; temporarily store 0 to the checksum as the header is being built
+        mov [edi + 10], 0              
+        mov [edi + 11], 0        
+
         popa
         mov eax, 0
         leave
