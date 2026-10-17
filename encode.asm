@@ -89,6 +89,11 @@ _encode_header:
         mov [edi + 2], ah               ; upper value of the total length in the header's 2nd byte
         mov [edi + 3], al               ; lower value of the total length in the header's 3rd byte
 
+        ; copy the values of the identification and store them into the header
+        mov eax, [esi + 20]             ; value of the identification
+        mov [edi + 4], ah               ; upper value of the identification in the header's 4th byte
+        mov [edi + 5], al               ; lower value of the identification in the header's 5th byte
+
         popa
         mov eax, 0
         leave
