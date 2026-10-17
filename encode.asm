@@ -84,6 +84,11 @@ _encode_header:
         or eax, ebx                     ; combine the two values into 1 byte segment
         mov [edi + 1], al               ; the value of the 1st byte of the header
 
+        ; copy the total length and store them to the header
+        mov eax, [esi + 16]             ; value of the total length
+        mov [edi + 2], ah               ; upper value of the total length in the header's 2nd byte
+        mov [edi + 3], al               ; lower value of the total length in the header's 3rd byte
+
         popa
         mov eax, 0
         leave
