@@ -66,7 +66,18 @@ _encode_header:
         ; edx do not.
         ;
 
+        ; move the address of the struct and address of header into a register
+        mov esi, [ebp + 8]              ; address of struct
+        mov edi, [ebp + 12]             ; address of the header array
+
+        ; copy the version and the IHL to the first byte
+        mov eax, [esi]                  ; value of the version
+        shl eax, 4                      ; move the value to the upper part of al
+        mov ebx, [esi + 4]              ; value of the IHL
+        or eax, ebx                     ; combine the two values into 1 byte segment
+        mov [edi], al                   ; the value of the 0th byte of the header
+
         popa
-        mov     eax, 0
+        mov eax, 0
         leave
         ret
