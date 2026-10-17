@@ -114,6 +114,35 @@ _encode_header:
         mov [edi + 10], 0              
         mov [edi + 11], 0        
 
+        ; copy the source ip address
+        mov eax, [esi + 44]             ; value of the source ip address
+
+        mov [edi + 12], al              ; first octet
+        shr eax, 8
+
+        mov [edi + 13], al              ; second octet
+        shr eax, 8
+
+        mov [edi + 14], al              ; third octet
+        shr eax, 8
+
+        mov [edi + 15], al              ; fourth octet
+
+        ; copy the destination ip address
+        mov eax, [esi + 48]              ; value of the destination ip address
+
+        mov [edi + 16], al              ; first octet
+        shr eax, 8
+
+        mov [edi + 17], al              ; second octet
+        shr eax, 8
+
+        mov [edi + 18], al              ; third octet
+        shr eax, 8
+
+        mov [edi + 19], al              ; fourth octet
+
+
         popa
         mov eax, 0
         leave
