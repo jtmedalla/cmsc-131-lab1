@@ -77,6 +77,13 @@ _encode_header:
         or eax, ebx                     ; combine the two values into 1 byte segment
         mov [edi], al                   ; the value of the 0th byte of the header
 
+        ; copy the DSCP and ECN to the second byte
+        mov eax, [esi + 8]              ; value of the DSCP
+        shl eax, 2                      ; move the value to the upper part of al
+        mov ebx, [esi + 12]             ; value of the ECN
+        or eax, ebx                     ; combine the two values into 1 byte segment
+        mov [edi + 1], al               ; the value of the 1st byte of the header
+
         popa
         mov eax, 0
         leave
