@@ -94,6 +94,14 @@ _encode_header:
         mov [edi + 4], ah               ; upper value of the identification in the header's 4th byte
         mov [edi + 5], al               ; lower value of the identification in the header's 5th byte
 
+        ; copy the values of the flags and the fragment offset 
+        mov eax, [esi + 24]             ; value of the flags
+        shl eax, 5                      ; shift left by 5 since flags occupy bit 5 - 7
+        mov ebx, [esi + 28]             ; value of the fragment offset
+        or al, bh                       ; combine the upper 5 bits of the fragment offset with the flags
+        mov [edi + 6], al               ; upper byte of flags + 5 bit of offset
+        mov [edi + 7], bl               ; remaining 8 bits of offset
+
         popa
         mov eax, 0
         leave
