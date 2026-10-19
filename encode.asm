@@ -66,7 +66,95 @@ _encode_header:
         ; edx do not.
         ;
 
+        ; move the address of the struct and address of header into a register
+        mov esi, [ebp + 8]              ; address of struct
+        mov edi, [ebp + 12]             ; address of the header array
+
+        ; copy the version and the IHL to the first byte
+        mov eax, [esi]                  ; value of the version
+        shl eax, 4                      ; move the value to the upper part of al
+        mov ebx, [esi + 4]              ; value of the IHL
+        or eax, ebx                     ; combine the two values into 1 byte segment
+        mov [edi], al                   ; the value of the 0th byte of the header
+
+        ; copy the DSCP and ECN to the second byte
+        mov eax, [esi + 8]              ; value of the DSCP
+        shl eax, 2                      ; move the value to the upper part of al
+        mov ebx, [esi + 12]             ; value of the ECN
+        or eax, ebx                     ; combine the two values into 1 byte segment
+        mov [edi + 1], al               ; the value of the 1st byte of the header
+
+        ; copy the total length and store them to the header
+        mov eax, [esi + 16]             ; value of the total length
+        mov [edi + 2], ah               ; upper value of the total length in the header's 2nd byte
+        mov [edi + 3], al               ; lower value of the total length in the header's 3rd byte
+
+        ; copy the values of the identification and store them into the header
+        mov eax, [esi + 20]             ; value of the identification
+        mov [edi + 4], ah               ; upper value of the identification in the header's 4th byte
+        mov [edi + 5], al               ; lower value of the identification in the header's 5th byte
+
+        ; copy the values of the flags and the fragment offset 
+        mov eax, [esi + 24]             ; value of the flags
+        shl eax, 5                      ; shift left by 5 since flags occupy bit 5 - 7
+        mov ebx, [esi + 28]             ; value of the fragment offset
+        or al, bh                       ; combine the upper 5 bits of the fragment offset with the flags
+        mov [edi + 6], al               ; upper byte of flags + 5 bit of offset
+        mov [edi + 7], bl               ; remaining 8 bits of offset
+
+        ; copy the value of the TTL and place them into the header
+        mov eax, [esi + 32]             ; value of the TTL
+        mov [edi + 8], al               ; the value of the 8th byte in the header
+
+        ; copy the value of the Protocol and place them into the header
+        mov eax, [esi + 36]             ; value of the protocol
+        mov [edi + 9], al               ; the value of the 9th byte in the header
+
+        ; temporarily store 0 to the checksum as the header is being built
+        mov eax, 0
+        mov [edi + 10], al            
+        mov [edi + 11], al
+
+        ; copy the source ip address
+        mov eax, [esi + 44]             ; value of the source ip address
+
+        mov [edi + 12], al              ; first octet
+        shr eax, 8
+
+        mov [edi + 13], al              ; second octet
+        shr eax, 8
+
+        mov [edi + 14], al              ; third octet
+        shr eax, 8
+
+        mov [edi + 15], al              ; fourth octet
+
+        ; copy the destination ip address
+        mov eax, [esi + 48]              ; value of the destination ip address
+
+        mov [edi + 16], al              ; first octet
+        shr eax, 8
+
+        mov [edi + 17], al              ; second octet
+        shr eax, 8
+
+        mov [edi + 18], al              ; third octet
+        shr eax, 8
+
+        mov [edi + 19], al              ; fourth octet
+
+        ; compute the checksum with the completed header
+        push 20                         ; length of the header and push to stack                   
+        push edi                        ; get the pointer of the header array and push to stack
+
+        call ip_checksum                ; call the ip_checksum function
+
+        add esp, 8                      ; remove the pushed arguments
+
+        mov [edi + 10], ah              ; upper value of the header checksum in the header's 10th byte
+        mov [edi + 11], al              ; upper value of the header checksum in the header's 11th by
+
         popa
-        mov     eax, 0
+        mov eax, 0
         leave
         ret

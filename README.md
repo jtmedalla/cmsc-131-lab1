@@ -60,7 +60,8 @@ must print for it in `tests/expected/NAME.out`. Then add one line to
 `tests/manifest.txt`:
 
 ```text
-NAME valid
+NAME val
+
 ```
 
 Use `invalid` for a header with a wrong checksum. A valid header joins the
@@ -116,34 +117,40 @@ Keep each part short. Update it when the plan changes.
 | Checksum Validation |---| ---? | Used to see if the checksum was valid, not included in the packet. just in the C print |
 Reference: https://networklessons.com/ip-routing/ipv4-packet-header
 
-
-### Problem analysis
-
-What the tool must read, what it must write, and which field is the hard
-one. State the header layout in your own words.
-
 ### Solution architecture
 
 How the three routines split the work. Which registers each routine uses,
 and how the struct offsets in `driver.c` map to the fields.
 
-### Timeline
+A cdecl routine performs several things:
+1. Passing Arguments - When arguments are pushed into the stack, it is done so from right to left based on how they appeared in the fucntion prototype located in the driver.c. The caller is responsible to push the arguments of the function prototype to the stack before the program proceeds to the callee function.
+2. Maintaining the Stack - The callee cleans up the stack after it finishes execution. The ESP register's value is adjusted based on the total size of the arguments.
+3. Returning Values - Return values can be as large as 32-bits and is contained in the EAX register. When dealing with larger return values, they have extra space allocated in the stack because of the caller. The return value is then copied to the stack by the callee.
+4. Using the Register - Registers are caller saved, the callee function must preserve their values should it modifiy it. However, some registers, like EAX, ECX, and EDX, are callee saved where the caller does not need to save their original values.
 
-One line per week. Name the subsystem each week finishes and the member
-who owns it.
+Based on #4, the cdecl routine must restore 5 registers after they were used, these are: EBX, ESI, EDI, EBP, and ESP. ESP is a special case since, instead of using the usual POP \<register\>, the instruction ADD ESP, \<(number of bytes of arguments) * 4\> is instead used.
+
+#### Call trace
+
+This section explains the call trace using --decode as the example
+
+1. First, drive.c calls the decode_header() function that was first instantiated as a function prototype on the top of the file. Via ENTER 0, 0, it pushes THE EBP to the stack then copies the value of ESP to EBP to change where the stack frame begins.
+2. Next, it takes the two arguments given and pushes them right to left to the stack. It first pushes &f which is the address of the ipvr4_fields struct. Then, it pushes the address of the 20 byte field header (which is in the form of an unsigned char array of size 20). This subtracts 4 from the value of ESP for each argument passed (in this case two arguments equates to subtracting 8).
+3. Then the program pushes the return address of the program execution, which subtracts another 4 from ESP.
+4. After the program finishes exeecuting the cleanup portion is performed. First, the callee must ensure that the registerers that must be restored, EBX, ESI, EDI, EBP are restored. Next, the program must call the LEAVE instruction to restore the value of EBP and throws away the items pushed in the stack. Then, RET pops the return address so the program could continue executing based on its value. Lastly, based on the caller's responsibility to clean up the two arguments that is passed through the instruction ADD ESP, 8.
+5. The Routine ends with the arguments placed on the stack and the value of ESP pointing to it.
+
+
+### Timeline
 
 | Week | Goal | Owner |
 |---|---|---|
 | 1 | Checksum /wo tests | JB Aparicio |
-| 2 | | |
-| 3 | | |
+| 2 | Decode | EJ Tolentino |
+| 3 | Encode | Julian Medalla |
 | 4 | Defense | |
 
 ## Subsystem Ownership
-
-Complete this section before the Week 1 progress report. The manual lists
-the three subsystems. Each member owns one. In a group of four, two members
-share one. The commit history must agree with this table.
 
 | Subsystem | Owner |
 |---|---|
@@ -153,14 +160,9 @@ share one. The commit history must agree with this table.
 
 ## Quirks and Issues
 
-Complete this section before the Week 3 progress report. The syllabus asks
-for documentation of quirks and issues with the complete implementation.
-One entry per item. State what happens, what causes it, and what the group
-did about it.
-
 ### Known issues
 
-- 
+In encoding, one of the main issues encountered are segmentation faults due to imporper handling of the stack. This is mainly due to to not adding the `[esp + ,number of arguments>]`. This was eventually solved by adding the missing argument. 
 
 ### Quirks
 
