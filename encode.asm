@@ -111,8 +111,9 @@ _encode_header:
         mov [edi + 9], al               ; the value of the 9th byte in the header
 
         ; temporarily store 0 to the checksum as the header is being built
-        mov [edi + 10], 0              
-        mov [edi + 11], 0        
+        mov eax, 0
+        mov [edi + 10], al            
+        mov [edi + 11], al
 
         ; copy the source ip address
         mov eax, [esi + 44]             ; value of the source ip address
